@@ -1,0 +1,48 @@
+public without sharing class SendEmailThroughFlowsAndApex {
+    
+     /*
+    @Method : sendEmailToContactByFlow
+    @param : List<String>: First element of the list should be in { [Contact Id] '~' + [Email Template Name]} format.
+    @return : void
+    @purpose : To send email to contact whose Id is send by flow using Apex action.
+    */
+    @InvocableMethod
+    public static void sendEmailToContactByFlow(List<String> action) {
+        try {
+            if(action != null && action.size() > 0){
+               String parameter = action[0];           
+                List<String> contactAndEmail = new List<String>();
+                contactAndEmail = parameter.split('~');       // split the action into two parts - Id + Email template
+
+                if(contactAndEmail[0] != null){
+                    Contact con = new Contact();
+                    con =[Select Id,Email,FirstName FROM Contact WHERE Id =:contactAndEmail[0]];
+                    // Send Email Functionality (Generic Send Email using Email Template Name)
+                    EmailTemplate et = [SELECT Id, Subject, Body FROM EmailTemplate WHERE DeveloperName =:contactAndEmail[1]];
+                    System.debug('et%%%'+et);
+					List<string> toAddress = new List<string>();
+					toAddress.add(con.Email);
+					Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+    				mail.setTemplateId(et.Id);
+                    mail.setToAddresses(toAddress);
+                    mail.setSubject(et.Subject);
+                    mail.setPlainTextBody(et.Body);
+                    mail.setTargetObjectId(con.Id);
+                    mail.setWhatId(con.Id);
+                    mail.setSaveAsActivity(false);
+                    mail.setUseSignature(false);
+                    System.debug('mail%%%'+mail);
+					List<Messaging.SingleEmailMessage> allmsg = new List<Messaging.SingleEmailMessage>();
+					allmsg.add(mail);
+                    if(allmsg.size() > 0 ){
+                        Messaging.sendEmail(allmsg,false);
+                    }				 
+                }  
+            }
+        } 
+        catch(Exception ex){
+           System.debug('Error Message:-'+ex.getMessage()+ex.getLineNumber());
+        }
+    }
+
+}
