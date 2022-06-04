@@ -1,0 +1,47 @@
+@isTest
+public class SendEmailThroughFlowsAndApexTest {
+    @testSetup
+    static void dataSetup(){
+        
+        Account acc = new Account();
+        acc.Name = 'testAccount';
+        insert acc;
+        
+        Contact con = new Contact();
+        con.FirstName = 'Anand';
+        con.LastName = 'Samantnani';
+        con.Email = 'anand.samantnani@mtxb2b.com.test';
+        con.Active__c = 'Yes';
+        con.Send_Email__c = true;
+        con.AccountId = acc.Id;
+        insert con;
+    }
+    
+    @isTest
+    static void sendEmailToContactByFlowTest(){
+        Contact c = [SELECT Id, Email, Name From Contact WHERE Email = 'anand.samantnani@mtxb2b.com.test' LIMIT 1];
+        
+        Profile p = [SELECT ID FROM Profile where name = 'Customer Community User' LIMIT 1];  
+      	User u = new User(
+          Email = 'test@test.com',
+          LastName =  'testUser',
+          FirstName = 'testUser',
+          Username =  'testUsertestUsertestUsertestUsertestUsertestUsertestUsertestUser' + '@test.com',
+          Alias = 'testU',
+          TimeZoneSidKey = 'GMT',
+          LocaleSidKey = 'en_US',
+          EmailEncodingKey = 'ISO-8859-1',
+          ProfileID = p.Id,
+          ContactId = c.Id,
+          LanguageLocaleKey = 'en_US'
+      );
+        
+        insert u;
+        
+        List<String> action = new List<String>{c.Id+'~'+'Send_Email_to_Contact_Flows_Example'};
+            
+        SendEmailThroughFlowsAndApex.sendEmailToContactByFlow(action);
+        
+    }
+
+}
